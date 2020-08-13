@@ -23,24 +23,28 @@ namespace OpenXmlPrj
             //ex.ExcelTableHeader(myData.Count) - формируем данные для Label
             //template - указываем название нашего файла  - шаблона
             new Framework.Create.Worker().Export(ex.ExcelTableLines(myData), ex.ExcelTableHeader(myData.Count), "template");
+            
+            #region Read Data From Excel
 
-            Console.WriteLine("Excel File Has Created!\nFor Read Data From Excel, press any key!");
-            Console.ReadKey();
-            //"C:\\Loading\\ReadMePlease.xlsx" - путь к файлу, с которого будем считывать данные (возвращяет нам DataTable)
-            var dt = new Framework.Load.Worker().ReadFile("C:\\Loading\\ReadMePlease.xlsx");
-            var myDataFromExcel = new List<DataForTest>();
-            //Заполняем наш объект, считанными данными из DataTable
-            foreach (DataRow item in dt.Rows)
-            {
-                myDataFromExcel.Add(new DataForTest(item));
-            }
+            ////Console.WriteLine("Excel File Has Created!\nFor Read Data From Excel, press any key!");
+            ////Console.ReadKey();
+            //////"C:\\Loading\\ReadMePlease.xlsx" - путь к файлу, с которого будем считывать данные (возвращяет нам DataTable)
+            ////var dt = new Framework.Load.Worker().ReadFile("C:\\Loading\\ReadMePlease.xlsx");
+            ////var myDataFromExcel = new List<DataForTest>();
+            //////Заполняем наш объект, считанными данными из DataTable
+            ////foreach (DataRow item in dt.Rows)
+            ////{
+            ////    myDataFromExcel.Add(new DataForTest(item));
+            ////}
 
-            Console.WriteLine("---------- Data ---------------------");
-            //Выводим считанные данные
-            foreach (var line in myDataFromExcel)
-            {
-                Console.WriteLine("{0} | {1} | {2}", line.A, line.B, line.C);
-            }
+            ////Console.WriteLine("---------- Data ---------------------");
+            //////Выводим считанные данные
+            ////foreach (var line in myDataFromExcel)
+            ////{
+            ////    Console.WriteLine("{0} | {1} | {2}", line.A, line.B, line.C);
+            ////}
+
+            #endregion Read Data From Excel
 
             Console.WriteLine("Done. Press any key, for exit!");
             Console.ReadKey();

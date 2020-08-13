@@ -19,7 +19,7 @@ namespace Framework.Create
         /// <summary>
         /// путь к папке с шаблонами 
         /// </summary>
-        private const String TemplateFolder = "C:\\Templates\\";
+        private const String TemplateFolder = @"..\..\Templates\";
 
         /// <summary>
         /// имя листа шаблона (с которым мы будем работать) 
