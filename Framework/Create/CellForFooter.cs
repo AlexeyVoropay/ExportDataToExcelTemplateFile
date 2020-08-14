@@ -8,7 +8,7 @@ namespace Framework.Create
         /// <summary>
         /// ячейка
         /// </summary>
-        public Cell _Cell { get; private set; }
+        public Cell Cell { get; private set; }
         /// <summary>
         /// значение
         /// </summary>
@@ -16,7 +16,7 @@ namespace Framework.Create
 
         public CellForFooter(Cell cell, String value)
         {
-            _Cell = cell;
+            Cell = cell;
             Value = value;
         }
     }

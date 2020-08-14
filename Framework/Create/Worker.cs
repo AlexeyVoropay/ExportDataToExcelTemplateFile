@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 
@@ -43,16 +44,15 @@ namespace Framework.Create
                 {
                     System.IO.Directory.CreateDirectory(excelFilesPath);
                 }
-
                 return excelFilesPath;
             }
         }
 
-        public void Export(System.Data.DataTable dataTable, System.Collections.Hashtable hashtable, String templateName)
+        public void Export(List<System.Data.DataTable> dataTables, List<KeyValuePair<string, string>> fields, String templateName)
         {
             var filePath = CreateFile(templateName);
 
-            OpenForRewriteFile(filePath, dataTable, hashtable);
+            OpenForRewriteFile(filePath, dataTables, fields);
 
             OpenFile(filePath);
         }
@@ -82,150 +82,247 @@ namespace Framework.Create
             return newFilePath;
         }
 
-        private void OpenForRewriteFile(String filePath, System.Data.DataTable dataTable, System.Collections.Hashtable hashtable)
+        private void FillFields(WorkbookPart workbookPart, string sheetId, List<KeyValuePair<string, string>> fieldsTable)
         {
-            Row rowTemplate = null;
-            var footer = new List<Footer>();
-            var firsIndexFlag = false;
-            using (var document = SpreadsheetDocument.Open(filePath, true))
+            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
+            var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+            foreach (var row in sheetData.Elements<Row>())
             {
-                Sheet sheet;
-                try
+                foreach (var cell in row.Descendants<Cell>())
                 {
-                    sheet = document.WorkbookPart.Workbook.GetFirstChild<Sheets>().Elements<Sheet>().SingleOrDefault(s => s.Name == SheetName);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(String.Format("Возможно в документе существует два листа с названием \"{0}\"!\n",SheetName), ex);
-                }
-
-                if (sheet == null)
-                {
-                    throw new Exception(String.Format("В шаблоне не найден \"{0}\"!\n",SheetName));
-                }
-
-                var worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(sheet.Id.Value);
-                var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-
-                foreach (var row in worksheetPart.Worksheet.GetFirstChild<SheetData>().Elements<Row>())
-                {
-                    foreach (var cell in row.Descendants<Cell>())
+                    if (cell == null)
+                        continue;
+                    var cellValue = GetCellValue(cell, workbookPart);
+                    if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
+                        continue;
+                    cellValue = cellValue.Substring(2, cellValue.Length - 4);
+                    if (fieldsTable.FirstOrDefault(x => cellValue == x.Key) is KeyValuePair<string, string> fieldTable)
                     {
-                        if (cell == null)
-                            continue;
-                        var value = GetCellValue(cell, document.WorkbookPart);
-                        if (value.IndexOf("Label:", StringComparison.Ordinal) != -1)
+                        if (!String.IsNullOrWhiteSpace(fieldTable.Key))
                         {
-                            var labelName = value.Replace("Label:", "").Trim();
-                            if (!hashtable.ContainsKey(labelName))
-                                throw new Exception(String.Format("Нет такого лэйбла \"{0}\"", labelName));
-                            cell.CellValue = new CellValue(hashtable[labelName].ToString());
+                            cell.CellValue = new CellValue(fieldTable.Value);
                             cell.DataType = new EnumValue<CellValues>(CellValues.String);
                         }
-                        if (String.IsNullOrWhiteSpace(value))
-                            continue;
                     }
-                }
-
-                var rowsForRemove = new List<Row>();
-                var fields = new List<Field>();
-                foreach (var row in sheetData.Elements<Row>())
-                {
-                    var celsForRemove = new List<Cell>();
-                    foreach (var cell in row.Descendants<Cell>())
+                    else
                     {
-                        if (cell == null)
-                            continue;
-                        var value = GetCellValue(cell, document.WorkbookPart);
-                        if (value.IndexOf("DataField:", StringComparison.Ordinal) != -1)
-                        {
-                            if (!firsIndexFlag)
-                            {
-                                firsIndexFlag = true;
-                                rowTemplate = row;
-                            }
-                            fields.Add(new Field(Convert.ToUInt32(Regex.Replace(cell.CellReference.Value, @"[^\d]+", ""))
-                                , new string(cell.CellReference.Value.ToCharArray().Where(p => !char.IsDigit(p)).ToArray())
-                                , value.Replace("DataField:", "")));
-                        }
-                        if (rowTemplate == null || row.RowIndex <= rowTemplate.RowIndex || String.IsNullOrWhiteSpace(value))
-                        {
-                            continue;
-                        }
-                        var item = footer.SingleOrDefault(p => p._Row.RowIndex == row.RowIndex);
-                        if (item == null)
-                        {
-                            footer.Add(new Footer(row, cell, value));
-                        }
-                        else
-                        {
-                            item.AddMoreCell(cell, value);
-                        }
-                        celsForRemove.Add(cell);
-                    }
-
-                    foreach (var cell in celsForRemove)
-                    {
-                        cell.Remove();
-                    }
-
-                    if (rowTemplate != null && row.RowIndex != rowTemplate.RowIndex)
-                    {
-                        rowsForRemove.Add(row);
+                        //throw new Exception(String.Format("Нет такого лэйбла \"{0}\"", value));
                     }
                 }
-
-                if (rowTemplate == null || rowTemplate.RowIndex == null || rowTemplate.RowIndex < 0)
-                {
-                    throw new Exception("Не удалось найти ни одного поля, для заполнения!");
-                }
-
-                foreach (var row in rowsForRemove)
-                {
-                    row.Remove();
-                }
-
-                var index = rowTemplate.RowIndex;
-                foreach (var row in from System.Data.DataRow item in dataTable.Rows select CreateRow(rowTemplate, index, item, fields))
-                {
-                    sheetData.InsertBefore(row, rowTemplate);
-                    index++;
-                }
-
-                foreach (var newRow in footer.Select(item => CreateLabel(item, (UInt32)dataTable.Rows.Count)))
-                {
-                    sheetData.InsertBefore(newRow, rowTemplate);
-                }
-
-                rowTemplate.Remove();
             }
         }
 
-        private Row CreateLabel(Footer item, uint count)
+        private UInt32 GetRowIndex(string cellReferenceValue)
         {
-            var row = item._Row;
-            row.RowIndex = new UInt32Value(item._Row.RowIndex + (count - 1));
+            return Convert.ToUInt32(Regex.Replace(cellReferenceValue, @"[^\d]+", ""));
+        }
+        private string GetColumnIndex(string cellReferenceValue)
+        {
+            return new string(cellReferenceValue.ToCharArray().Where(p => !char.IsDigit(p)).ToArray());
+        }
+
+        private Sheet GetSheet(SpreadsheetDocument document)
+        {
+            Sheet sheet;
+            try
+            {
+                sheet = document.WorkbookPart.Workbook.GetFirstChild<Sheets>().Elements<Sheet>().SingleOrDefault(s => s.Name == SheetName);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(String.Format("Возможно в документе существует два листа с названием \"{0}\"!\n", SheetName), ex);
+            }
+            if (sheet == null)
+            {
+                throw new Exception(String.Format("В шаблоне не найден \"{0}\"!\n", SheetName));
+            }
+            return sheet;
+        }
+
+        private bool IsRowContainsCellsForFill(Row row, WorkbookPart workbookPart, string[] tableNames)
+        {
+            foreach (var cell in row.Descendants<Cell>())
+            {
+                var cellValue = GetCellValue(cell, workbookPart);
+                if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
+                    continue;
+                if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
+                    continue;
+                cellValue = cellValue.Substring(2, cellValue.Length - 4);
+                foreach (var tableName in tableNames)
+                {
+                    if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private List<Field> GetRowFieldsForFill(Row rowTemplate, WorkbookPart workbookPart, string[] tableNames)
+        {
+            var fields = new List<Field>();
+            foreach (var cell in rowTemplate.Descendants<Cell>())
+            {
+                var cellValue = GetCellValue(cell, workbookPart);
+                if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
+                    continue;
+                if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
+                    continue;
+                cellValue = cellValue.Substring(2, cellValue.Length - 4);
+
+                foreach (var tableName in tableNames)
+                {
+                    if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
+                    {
+                        var rowId = GetRowIndex(cell.CellReference.Value);
+                        var columnId = GetColumnIndex(cell.CellReference.Value);
+                        fields.Add(new Field(rowId, columnId, cellValue));
+                    }
+                }                
+            }
+            return fields;
+        }
+
+
+        private void FillTables(WorkbookPart workbookPart, string sheetId, List<System.Data.DataTable> dataTables)
+        {
+            var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
+            var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+            var rows = sheetData.Elements<Row>().ToArray();
+            for (int rowIndex = 0; rowIndex < rows.Length; rowIndex++)
+            {
+                var row = rows[rowIndex];
+                if (!IsRowContainsCellsForFill(row, workbookPart, dataTables.Select(x => x.TableName).ToArray()))
+                    continue;
+                var fields = GetRowFieldsForFill(row, workbookPart, dataTables.Select(x => x.TableName).ToArray());
+                var generatedRowIndex = row.RowIndex;
+                if (fields.Any())
+                {
+                    var dataTableRowsCount = dataTables.Max(x=>x.Rows.Count);
+                    for (int i = 0; i < dataTableRowsCount; i++)
+                    {
+                        var generatedRow = CreateRow(row, generatedRowIndex, dataTables, i, fields);
+                        if (i == 0)
+                        {
+                            row.InsertBeforeSelf(generatedRow);
+                        }
+                        else
+                        {
+                            Helper1.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
+                        }
+                        generatedRowIndex++;
+                    }
+                    row.Remove();
+                }
+            }
+
+
+            //foreach (var newRow in footer.Select(item => CreateLabel(item, (UInt32)dataTable.Rows.Count)))
+            //{
+            //    sheetData.InsertBefore(newRow, rowTemplate);
+            //}
+
+            //foreach (var row in sheetData.Elements<Row>())
+            //{
+            //    if (!IsRowContainsCellsForFill(row, workbookPart, dataTable.TableName))
+            //        continue;
+            //    var fields = GetRowFieldsForFill(row, workbookPart, dataTable.TableName);
+            //    var generatedRowIndex = row.RowIndex;
+            //    if (fields.Any())
+            //    {                    
+            //        var dataTableRowsCount = dataTable.Rows.Count;
+            //        for (int i = 0; i < 2; i++)
+            //        {
+            //            var item = dataTable.Rows[i];
+            //            var generatedRow = CreateRow(row, generatedRowIndex, item, fields);
+            //            row.InsertBeforeSelf(generatedRow);
+            //            generatedRowIndex++;
+            //        }
+            //        row.Remove();
+            //    }
+            //}
+            //var t1Count = sheetData.Elements<Row>().Count();
+        }
+
+        private void OpenForRewriteFile(String filePath, List<System.Data.DataTable> dataTables, List<KeyValuePair<string, string>> fieldsTable)
+        {            
+            using (var document = SpreadsheetDocument.Open(filePath, true))
+            {
+                Sheet sheet = GetSheet(document);
+                var workbookPart = document.WorkbookPart;
+                FillFields(workbookPart, sheet.Id.Value, fieldsTable);
+                //FillTable(workbookPart, sheet.Id.Value, dataTables.Skip(1).Take(1).FirstOrDefault());
+                FillTables(workbookPart, sheet.Id.Value, dataTables);
+            }
+        }
+
+        private StringValue GetCellReference(Cell cell, UInt32Value rowIndex)
+        {
+            var cellValue = cell.CellReference.Value;
+            return new StringValue(cellValue.Replace(Regex.Replace(cellValue, @"[^\d]+", ""), rowIndex.ToString()));
+        }
+
+        private Row CreateLabel(GeneratingRow item, uint count)
+        {
+            var row = item.Row;
+            row.RowIndex = new UInt32Value(item.Row.RowIndex + (count - 1));
             foreach (var cell in item.Cells)
             {
-                cell._Cell.CellReference = new StringValue(cell._Cell.CellReference.Value.Replace(Regex.Replace(cell._Cell.CellReference.Value, @"[^\d]+", ""), row.RowIndex.ToString()));
-                cell._Cell.CellValue = new CellValue(cell.Value);
-                cell._Cell.DataType = new EnumValue<CellValues>(CellValues.String);
-                row.Append(cell._Cell);
+                cell.Cell.CellReference = GetCellReference(cell.Cell, row.RowIndex);
+                cell.Cell.CellValue = new CellValue(cell.Value);
+                cell.Cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                row.Append(cell.Cell);
             }
             return row;
         }
 
-        private Row CreateRow(Row rowTemplate, uint index, System.Data.DataRow item, List<Field> fields)
+        private Row CreateRow(Row rowTemplate, uint rowIndex, System.Data.DataRow item, List<Field> fields)
         {
             var newRow = (Row)rowTemplate.Clone();
-            newRow.RowIndex = new UInt32Value(index);
+            newRow.RowIndex = new UInt32Value(rowIndex);
 
             foreach (var cell in newRow.Elements<Cell>())
             {
-                cell.CellReference = new StringValue(cell.CellReference.Value.Replace(Regex.Replace(cell.CellReference.Value, @"[^\d]+", ""), index.ToString(CultureInfo.InvariantCulture)));
-                foreach (var fil in fields.Where(fil => cell.CellReference == fil.Column + index))
+                cell.CellReference = GetCellReference(cell, new UInt32Value(rowIndex));
+                foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
                 {
-                    cell.CellValue = new CellValue(item[fil._Field].ToString());
+                    cell.CellValue = new CellValue(item[field._Field].ToString());
+                    cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                }
+            }
+            return newRow;
+        }
+
+        private Row CreateRow(Row rowTemplate, uint rowIndex, System.Data.DataTable table, int tableRowIndex, List<Field> fields)
+        {
+            var newRow = (Row)rowTemplate.Clone();
+            newRow.RowIndex = new UInt32Value(rowIndex);
+            foreach (var cell in newRow.Elements<Cell>())
+            {
+                cell.CellReference = GetCellReference(cell, new UInt32Value(rowIndex));
+                foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
+                {
+                    cell.CellValue = new CellValue(table.Rows[tableRowIndex][field._Field].ToString());
+                    cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                }
+            }
+            return newRow;
+        }
+
+        private Row CreateRow(Row rowTemplate, uint rowIndex, List<System.Data.DataTable> tables, int tableRowIndex, List<Field> fields)
+        {
+            var newRow = (Row)rowTemplate.Clone();
+            newRow.RowIndex = new UInt32Value(rowIndex);
+            foreach (var cell in newRow.Elements<Cell>())
+            {
+                cell.CellReference = GetCellReference(cell, new UInt32Value(rowIndex));
+                foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
+                {
+                    var tableName = field._Field.Split('.')[0];
+                    var table = tables.FirstOrDefault(x => x.TableName == tableName);
+                    cell.CellValue = table.Rows.Count > tableRowIndex
+                        ? new CellValue(table.Rows[tableRowIndex][field._Field].ToString())
+                        : new CellValue(string.Empty);
                     cell.DataType = new EnumValue<CellValues>(CellValues.String);
                 }
             }
@@ -235,8 +332,9 @@ namespace Framework.Create
 
         private string GetCellValue(Cell cell, WorkbookPart wbPart)
         {
+            if (cell == null)
+                return null;
             var value = cell.InnerText;
-
             if (cell.DataType == null)
             {
                 return value;
@@ -253,7 +351,6 @@ namespace Framework.Create
                     }
                     break;
             }
-
             return value;
         }
 

@@ -49,6 +49,7 @@
     <Compile Include="Create\Field.cs" />
     <Compile Include="Create\Footer.cs" />
     <Compile Include="Create\Worker.cs" />
+    <Compile Include="Helper1.cs" />
     <Compile Include="Load\ColumnName.cs" />
     <Compile Include="Load\Worker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
