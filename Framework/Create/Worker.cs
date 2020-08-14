@@ -107,18 +107,35 @@ namespace Framework.Create
                 var worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(sheet.Id.Value);
                 var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
 
+                foreach (var row in worksheetPart.Worksheet.GetFirstChild<SheetData>().Elements<Row>())
+                {
+                    foreach (var cell in row.Descendants<Cell>())
+                    {
+                        if (cell == null)
+                            continue;
+                        var value = GetCellValue(cell, document.WorkbookPart);
+                        if (value.IndexOf("Label:", StringComparison.Ordinal) != -1)
+                        {
+                            var labelName = value.Replace("Label:", "").Trim();
+                            if (!hashtable.ContainsKey(labelName))
+                                throw new Exception(String.Format("Нет такого лэйбла \"{0}\"", labelName));
+                            cell.CellValue = new CellValue(hashtable[labelName].ToString());
+                            cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                        }
+                        if (String.IsNullOrWhiteSpace(value))
+                            continue;
+                    }
+                }
+
                 var rowsForRemove = new List<Row>();
                 var fields = new List<Field>();
-                foreach (var row in worksheetPart.Worksheet.GetFirstChild<SheetData>().Elements<Row>())
+                foreach (var row in sheetData.Elements<Row>())
                 {
                     var celsForRemove = new List<Cell>();
                     foreach (var cell in row.Descendants<Cell>())
                     {
                         if (cell == null)
-                        {
                             continue;
-                        }
-
                         var value = GetCellValue(cell, document.WorkbookPart);
                         if (value.IndexOf("DataField:", StringComparison.Ordinal) != -1)
                         {
@@ -130,21 +147,7 @@ namespace Framework.Create
                             fields.Add(new Field(Convert.ToUInt32(Regex.Replace(cell.CellReference.Value, @"[^\d]+", ""))
                                 , new string(cell.CellReference.Value.ToCharArray().Where(p => !char.IsDigit(p)).ToArray())
                                 , value.Replace("DataField:", "")));
-
                         }
-
-                        if (value.IndexOf("Label:", StringComparison.Ordinal) != -1 && rowTemplate == null)
-                        {
-                            var labelName = value.Replace("Label:", "").Trim();
-                            if (!hashtable.ContainsKey(labelName))
-                            {
-                                throw new Exception(String.Format("Нет такого лэйбла \"{0}\"", labelName));
-                            }
-                            cell.CellValue = new CellValue(hashtable[labelName].ToString());
-                            cell.DataType = new EnumValue<CellValues>(CellValues.String);
-
-                        }
-
                         if (rowTemplate == null || row.RowIndex <= rowTemplate.RowIndex || String.IsNullOrWhiteSpace(value))
                         {
                             continue;
@@ -152,11 +155,11 @@ namespace Framework.Create
                         var item = footer.SingleOrDefault(p => p._Row.RowIndex == row.RowIndex);
                         if (item == null)
                         {
-                            footer.Add(new Footer(row, cell, value.IndexOf("Label:", StringComparison.Ordinal) != -1 ? hashtable[value.Replace("Label:", "").Trim()].ToString() : value));
+                            footer.Add(new Footer(row, cell, value));
                         }
                         else
                         {
-                            item.AddMoreCell(cell, value.IndexOf("Label:", StringComparison.Ordinal) != -1 ? hashtable[value.Replace("Label:", "").Trim()].ToString() : value);
+                            item.AddMoreCell(cell, value);
                         }
                         celsForRemove.Add(cell);
                     }
