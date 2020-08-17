@@ -183,9 +183,9 @@ namespace Framework.Create
             return fields;
         }
 
-
         private void FillTables(WorkbookPart workbookPart, string sheetId, List<System.Data.DataTable> dataTables)
         {
+            var processedTablesRows = dataTables.ToDictionary(x=>x.TableName, y => 0);
             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
             var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
             var rows = sheetData.Elements<Row>().ToArray();
@@ -198,10 +198,24 @@ namespace Framework.Create
                 var generatedRowIndex = row.RowIndex;
                 if (fields.Any())
                 {
-                    var dataTableRowsCount = dataTables.Max(x=>x.Rows.Count);
-                    for (int i = 0; i < dataTableRowsCount; i++)
+                    var tableNamesForAddOneRow = new List<string>();
+                    int rowsForProcess = 0;
+                    if (!fields.Any(x => x._Field.Contains(":1")))
                     {
-                        var generatedRow = CreateRow(row, generatedRowIndex, dataTables, i, fields);
+                        rowsForProcess = dataTables.Max(x => x.Rows.Count);
+                    }
+                    else
+                    {
+                        rowsForProcess = 1;                        
+                        for (int i = 0; i < fields.Count; i++)
+                        {
+                            fields[i] = new Field(fields[i].Row, fields[i].Column, fields[i]._Field.Replace(":1", ""));
+                            tableNamesForAddOneRow.Add(fields[i]._Field.Split('.')[0]);
+                        }                        
+                    }
+                    for (int i = 0; i < rowsForProcess; i++)
+                    {
+                        var generatedRow = CreateRow(row, generatedRowIndex, dataTables, i, fields, processedTablesRows);
                         if (i == 0)
                         {
                             row.InsertBeforeSelf(generatedRow);
@@ -211,6 +225,10 @@ namespace Framework.Create
                             Helper1.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
                         }
                         generatedRowIndex++;
+                    }
+                    foreach (var tableNameForAddOneRow in tableNamesForAddOneRow.Distinct())
+                    {
+                        processedTablesRows[tableNameForAddOneRow]++;
                     }
                     row.Remove();
                 }
@@ -309,7 +327,7 @@ namespace Framework.Create
             return newRow;
         }
 
-        private Row CreateRow(Row rowTemplate, uint rowIndex, List<System.Data.DataTable> tables, int tableRowIndex, List<Field> fields)
+        private Row CreateRow(Row rowTemplate, uint rowIndex, List<System.Data.DataTable> tables, int tableRowIndex, List<Field> fields, Dictionary<string, int> processedTablesRows)
         {
             var newRow = (Row)rowTemplate.Clone();
             newRow.RowIndex = new UInt32Value(rowIndex);
@@ -320,15 +338,15 @@ namespace Framework.Create
                 {
                     var tableName = field._Field.Split('.')[0];
                     var table = tables.FirstOrDefault(x => x.TableName == tableName);
-                    cell.CellValue = table.Rows.Count > tableRowIndex
-                        ? new CellValue(table.Rows[tableRowIndex][field._Field].ToString())
+                    var index = tableRowIndex + processedTablesRows[tableName];
+                    cell.CellValue = table.Rows.Count > index
+                        ? new CellValue(table.Rows[index][field._Field].ToString())
                         : new CellValue(string.Empty);
                     cell.DataType = new EnumValue<CellValues>(CellValues.String);
                 }
             }
             return newRow;
         }
-
 
         private string GetCellValue(Cell cell, WorkbookPart wbPart)
         {
