@@ -1,4 +1,5 @@
-﻿using OpenXmlPrj.Models;
+﻿using ExportDataToExcelTemplate;
+using OpenXmlPrj.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -25,7 +26,7 @@ namespace OpenXmlPrj
             //new Framework.Create.Worker().Export(new List<DataTable> { ex.ExcelTableLines(myData), ex.ExcelTableLines2(myData) }, ex.Fields(myData.Count), "template");
 
             var data = TestData.GetTestData();
-            new Framework.Create.Worker().Export(data.GetTables(), data.GetFields(), "template");
+            new Worker().Export(data.GetTables(), data.GetFields(), "template");
 
             #region Read Data From Excel
 
