@@ -11,6 +11,10 @@ namespace OpenXmlPrj
             {
                 ReportDate = "12.07.2020",
                 ReportNumber = "87",
+                Hse = new Hse
+                {
+                    NumStopCards = 12,
+                },
                 WellInfo = new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("Заказчик","ООО\"ИНК\""),

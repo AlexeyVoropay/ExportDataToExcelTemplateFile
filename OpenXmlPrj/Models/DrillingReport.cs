@@ -20,7 +20,8 @@ namespace OpenXmlPrj.Models
             return new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("ReportDate", ReportDate),
-                    new KeyValuePair<string, string>("ReportNumber", ReportNumber)
+                    new KeyValuePair<string, string>("ReportNumber", ReportNumber),
+                    new KeyValuePair<string, string>("Hse.NumStopCards", Hse.NumStopCards.ToString()),
                 };
         }
 
@@ -72,5 +73,19 @@ namespace OpenXmlPrj.Models
                     сonstructionTable,
                 };
         }
+
+        public Hse Hse { get; set; }
+    }
+
+    public class Hse
+    {
+        public long Id { get; set; }
+        public long ParentId { get; set; }
+        public string ReportDate { get; set; }
+        public string LastIncidentInjury { get; set; }
+        public short NumStopCards { get; set; }
+        public short NumWorkPermits { get; set; }
+        public short NumAlarmsDone { get; set; }
+        public string LastSafetyMeeting { get; set; }
     }
 }

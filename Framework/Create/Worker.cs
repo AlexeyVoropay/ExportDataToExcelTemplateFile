@@ -202,7 +202,7 @@ namespace Framework.Create
                     int rowsForProcess = 0;
                     if (!fields.Any(x => x._Field.Contains(":1")))
                     {
-                        rowsForProcess = dataTables.Max(x => x.Rows.Count);
+                        rowsForProcess = dataTables.Max(x => x.Rows.Count - processedTablesRows[x.TableName]);
                     }
                     else
                     {

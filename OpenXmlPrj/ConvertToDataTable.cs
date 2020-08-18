@@ -1,10 +1,10 @@
-﻿using System;
+﻿using OpenXmlPrj.Interfaces;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using Interfaces;
 
-namespace Converter
+namespace OpenXmlPrj
 {
     public class ConvertToDataTable
     {
