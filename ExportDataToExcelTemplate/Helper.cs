@@ -238,7 +238,6 @@ namespace ExportDataToExcelTemplate
             // Create a regular expression to match the row index portion the cell name.
             Regex regex = new Regex(@"\d+");
             Match match = regex.Match(cellReference);
-
             return uint.Parse(match.Value);
         }
 
@@ -315,6 +314,7 @@ namespace ExportDataToExcelTemplate
 
             return match.Value;
         }
+
         public enum CellReferencePartEnum
         {
             None,
@@ -322,6 +322,7 @@ namespace ExportDataToExcelTemplate
             Row,
             Both
         }
+
         private static List<char> Letters = new List<char>() { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ' };
     }
 }

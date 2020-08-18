@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="lib\**" />
+    <EmbeddedResource Remove="lib\**" />
+    <None Remove="lib\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DocumentFormat.OpenXml" Version="2.11.3" />
   </ItemGroup>
 
@@ -15,7 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="lib\" />
+    <Compile Update="Models\MergeCellReference.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
 </Project>

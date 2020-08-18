@@ -15,6 +15,8 @@ namespace ExcelTemplates.Models
 
         public List<KeyValuePair<string, string>> Сonstruction { get; internal set; }
 
+        public Hse Hse { get; set; }
+
         public List<KeyValuePair<string, string>> GetFields()
         {
             return new List<KeyValuePair<string, string>>
@@ -22,6 +24,9 @@ namespace ExcelTemplates.Models
                     new KeyValuePair<string, string>("ReportDate", ReportDate),
                     new KeyValuePair<string, string>("ReportNumber", ReportNumber),
                     new KeyValuePair<string, string>("Hse.NumStopCards", Hse.NumStopCards.ToString()),
+                    new KeyValuePair<string, string>("Hse.NumAlarmsDone", Hse.NumAlarmsDone.ToString()),
+                    new KeyValuePair<string, string>("Hse.LastSafetyMeeting", Hse.LastSafetyMeeting),                    
+                    new KeyValuePair<string, string>("Hse.Incident", Hse.Incident.ToString()),
                 };
         }
 
@@ -72,9 +77,7 @@ namespace ExcelTemplates.Models
                     svInfoTable,
                     сonstructionTable,
                 };
-        }
-
-        public Hse Hse { get; set; }
+        }        
     }
 
     public class Hse
@@ -87,5 +90,6 @@ namespace ExcelTemplates.Models
         public short NumWorkPermits { get; set; }
         public short NumAlarmsDone { get; set; }
         public string LastSafetyMeeting { get; set; }
+        public string Incident { get; internal set; }
     }
 }

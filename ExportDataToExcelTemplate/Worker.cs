@@ -15,71 +15,34 @@ namespace ExportDataToExcelTemplate
     /// <summary>
     /// Создание Excel файла
     /// </summary>
-    public class Worker
+    public partial class Worker
     {
-        /// <summary>
-        /// путь к папке с шаблонами 
-        /// </summary>
-        private String TemplateFolder = Path.GetFullPath(@"..\..\..\..\ExcelTemplates\Templates\");
-
-        /// <summary>
-        /// имя листа шаблона (с которым мы будем работать) 
-        /// </summary>
-        private const String SheetName = "Лист1";
-
-        /// <summary>
-        /// тип документа
-        /// </summary>
-        private const String FileType = ".xlsx";
-
-        /// <summary>
-        /// Папка, для хранения выгруженных файлов
-        /// </summary>
-        public static String Directory
-        {
-            get
-            {
-                const string excelFilesPath = @"C:\xlsx_repository\";
-                if (System.IO.Directory.Exists(excelFilesPath) == false)
-                {
-                    System.IO.Directory.CreateDirectory(excelFilesPath);
-                }
-                return excelFilesPath;
-            }
-        }
-
         public void Export(List<System.Data.DataTable> dataTables, List<KeyValuePair<string, string>> fields, String templateName)
         {
-            var filePath = CreateFile(templateName);
-
+            var filePath = FileHelper.CreateFile(templateName);
             OpenForRewriteFile(filePath, dataTables, fields);
 
             //OpenFile(filePath);
         }
 
-        private String CreateFile(String templateName)
+        private void OpenForRewriteFile(String filePath, List<System.Data.DataTable> dataTables, List<KeyValuePair<string, string>> fieldsTable)
         {
-            var templateFelePath = String.Format("{0}{1}{2}", TemplateFolder, templateName, FileType);
-            var templateFolderPath = String.Format("{0}{1}", Directory, templateName);
-            if (!File.Exists(String.Format("{0}{1}{2}", TemplateFolder, templateName, FileType)))
+            using (var document = SpreadsheetDocument.Open(filePath, true))
             {
-                throw new Exception(String.Format("Не удалось найти шаблон документа \n\"{0}{1}{2}\"!", TemplateFolder, templateName, FileType));
-            }
+                Sheet sheet = SheetHelper.GetSheet(document);
+                var workbookPart = document.WorkbookPart;
+                FillFields(workbookPart, sheet.Id.Value, fieldsTable);
+                FillTables(workbookPart, sheet.Id.Value, dataTables);
 
-            //Если в пути шаблона (в templateName) присутствуют папки, то при выгрузке, тоже создаём папки
-            var index = (templateFolderPath).LastIndexOf("\\", System.StringComparison.Ordinal);
-            if (index > 0)
-            {
-                var directoryTest = (templateFolderPath).Remove(index, (templateFolderPath).Length - index);
-                if (System.IO.Directory.Exists(directoryTest) == false)
-                {
-                    System.IO.Directory.CreateDirectory(directoryTest);
-                }
+                //var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id.Value);
+                //if (worksheetPart.Worksheet.Elements<MergeCells>().Count() > 0)
+                //{ 
+                //    var worksheet = worksheetPart.Worksheet;
+                //    var mergeCells = worksheet.Elements<MergeCells>().First();
+                //    mergeCells.Append(new MergeCell() { Reference = new StringValue("E8:F8") });
+                //    worksheetPart.Worksheet.Save();
+                //}
             }
-
-            var newFilePath = String.Format("{0}_{1}{2}", templateFolderPath, Regex.Replace((DateTime.Now.ToString(CultureInfo.InvariantCulture)), @"[^a-z0-9]+", ""), FileType);
-            File.Copy(templateFelePath, newFilePath, true);
-            return newFilePath;
         }
 
         private void FillFields(WorkbookPart workbookPart, string sheetId, List<KeyValuePair<string, string>> fieldsTable)
@@ -92,7 +55,7 @@ namespace ExportDataToExcelTemplate
                 {
                     if (cell == null)
                         continue;
-                    var cellValue = GetCellValue(cell, workbookPart);
+                    var cellValue = CellHelper.GetCellValue(cell, workbookPart);
                     if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
                         continue;
                     cellValue = cellValue.Substring(2, cellValue.Length - 4);
@@ -112,80 +75,9 @@ namespace ExportDataToExcelTemplate
             }
         }
 
-        private UInt32 GetRowIndex(string cellReferenceValue)
-        {
-            return Convert.ToUInt32(Regex.Replace(cellReferenceValue, @"[^\d]+", ""));
-        }
-        private string GetColumnIndex(string cellReferenceValue)
-        {
-            return new string(cellReferenceValue.ToCharArray().Where(p => !char.IsDigit(p)).ToArray());
-        }
-
-        private Sheet GetSheet(SpreadsheetDocument document)
-        {
-            Sheet sheet;
-            try
-            {
-                sheet = document.WorkbookPart.Workbook.GetFirstChild<Sheets>().Elements<Sheet>().SingleOrDefault(s => s.Name == SheetName);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception(String.Format("Возможно в документе существует два листа с названием \"{0}\"!\n", SheetName), ex);
-            }
-            if (sheet == null)
-            {
-                throw new Exception(String.Format("В шаблоне не найден \"{0}\"!\n", SheetName));
-            }
-            return sheet;
-        }
-
-        private bool IsRowContainsCellsForFill(Row row, WorkbookPart workbookPart, string[] tableNames)
-        {
-            foreach (var cell in row.Descendants<Cell>())
-            {
-                var cellValue = GetCellValue(cell, workbookPart);
-                if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
-                    continue;
-                if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
-                    continue;
-                cellValue = cellValue.Substring(2, cellValue.Length - 4);
-                foreach (var tableName in tableNames)
-                {
-                    if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
-                        return true;
-                }
-            }
-            return false;
-        }
-
-        private List<ExportDataToExcelTemplate.Models.Field> GetRowFieldsForFill(Row rowTemplate, WorkbookPart workbookPart, string[] tableNames)
-        {
-            var fields = new List<ExportDataToExcelTemplate.Models.Field>();
-            foreach (var cell in rowTemplate.Descendants<Cell>())
-            {
-                var cellValue = GetCellValue(cell, workbookPart);
-                if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
-                    continue;
-                if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
-                    continue;
-                cellValue = cellValue.Substring(2, cellValue.Length - 4);
-
-                foreach (var tableName in tableNames)
-                {
-                    if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
-                    {
-                        var rowId = GetRowIndex(cell.CellReference.Value);
-                        var columnId = GetColumnIndex(cell.CellReference.Value);
-                        fields.Add(new ExportDataToExcelTemplate.Models.Field(rowId, columnId, cellValue));
-                    }
-                }                
-            }
-            return fields;
-        }
-
         private void FillTables(WorkbookPart workbookPart, string sheetId, List<System.Data.DataTable> dataTables)
         {
-            var processedTablesRows = dataTables.ToDictionary(x=>x.TableName, y => 0);
+            var processedTablesRows = dataTables.ToDictionary(x => x.TableName, y => 0);
             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
             var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
             var rows = sheetData.Elements<Row>().ToArray();
@@ -206,12 +98,12 @@ namespace ExportDataToExcelTemplate
                     }
                     else
                     {
-                        rowsForProcess = 1;                        
+                        rowsForProcess = 1;
                         for (int i = 0; i < fields.Count; i++)
                         {
-                            fields[i] = new ExportDataToExcelTemplate.Models.Field(fields[i].Row, fields[i].Column, fields[i]._Field.Replace(":1", ""));
+                            fields[i] = new Models.Field(fields[i].Row, fields[i].Column, fields[i]._Field.Replace(":1", ""));
                             tableNamesForAddOneRow.Add(fields[i]._Field.Split('.')[0]);
-                        }                        
+                        }
                     }
                     for (int i = 0; i < rowsForProcess; i++)
                     {
@@ -224,6 +116,31 @@ namespace ExportDataToExcelTemplate
                         {
                             Helper.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
                         }
+
+                        if (row.RowIndex != generatedRowIndex)
+                        {
+                            if (worksheetPart.Worksheet.Elements<MergeCells>().Count() > 0)
+                            {
+                                var worksheet = worksheetPart.Worksheet;
+                                var mergeCells = worksheet.Elements<MergeCells>().First();
+                                var rowMergeCellsList = new List<MergeCell>();
+                                var mergeCellChildElements = mergeCells.ChildElements;
+                                foreach (MergeCell item in mergeCellChildElements)
+                                {
+                                    var mergeCellReference = new MergeCellReference(item.Reference);
+                                    if (mergeCellReference.CellFrom.RowIndex == row.RowIndex)
+                                    {
+                                        var cellFrom = mergeCellReference.CellFrom;
+                                        var cellTo = mergeCellReference.CellTo;
+                                        cellFrom.RowIndex = (int)generatedRowIndex.Value;
+                                        cellTo.RowIndex = (int)generatedRowIndex.Value;
+                                        var mergeCell = new MergeCell { Reference = $"{cellFrom.Reference}:{cellTo.Reference}" };
+                                        mergeCells.Append(mergeCell);
+                                    }
+                                }
+                            }
+                        }
+
                         generatedRowIndex++;
                     }
                     foreach (var tableNameForAddOneRow in tableNamesForAddOneRow.Distinct())
@@ -232,9 +149,9 @@ namespace ExportDataToExcelTemplate
                     }
                     row.Remove();
                 }
-            }
+            }           
 
-
+            #region old
             //foreach (var newRow in footer.Select(item => CreateLabel(item, (UInt32)dataTable.Rows.Count)))
             //{
             //    sheetData.InsertBefore(newRow, rowTemplate);
@@ -260,80 +177,65 @@ namespace ExportDataToExcelTemplate
             //    }
             //}
             //var t1Count = sheetData.Elements<Row>().Count();
+            #endregion old
         }
 
-        private void OpenForRewriteFile(String filePath, List<System.Data.DataTable> dataTables, List<KeyValuePair<string, string>> fieldsTable)
-        {            
-            using (var document = SpreadsheetDocument.Open(filePath, true))
-            {
-                Sheet sheet = GetSheet(document);
-                var workbookPart = document.WorkbookPart;
-                FillFields(workbookPart, sheet.Id.Value, fieldsTable);
-                //FillTable(workbookPart, sheet.Id.Value, dataTables.Skip(1).Take(1).FirstOrDefault());
-                FillTables(workbookPart, sheet.Id.Value, dataTables);
-            }
-        }
+        
 
-        private StringValue GetCellReference(Cell cell, UInt32Value rowIndex)
+        private bool IsRowContainsCellsForFill(Row row, WorkbookPart workbookPart, string[] tableNames)
         {
-            var cellValue = cell.CellReference.Value;
-            return new StringValue(cellValue.Replace(Regex.Replace(cellValue, @"[^\d]+", ""), rowIndex.ToString()));
-        }
-
-        private Row CreateLabel(GeneratingRow item, uint count)
-        {
-            var row = item.Row;
-            row.RowIndex = new UInt32Value(item.Row.RowIndex + (count - 1));
-            foreach (var cell in item.Cells)
+            foreach (var cell in row.Descendants<Cell>())
             {
-                cell.Cell.CellReference = GetCellReference(cell.Cell, row.RowIndex);
-                cell.Cell.CellValue = new CellValue(cell.Value);
-                cell.Cell.DataType = new EnumValue<CellValues>(CellValues.String);
-                row.Append(cell.Cell);
-            }
-            return row;
-        }
-
-        private Row CreateRow(Row rowTemplate, uint rowIndex, System.Data.DataRow item, List<ExportDataToExcelTemplate.Models.Field> fields)
-        {
-            var newRow = (Row)rowTemplate.Clone();
-            newRow.RowIndex = new UInt32Value(rowIndex);
-
-            foreach (var cell in newRow.Elements<Cell>())
-            {
-                cell.CellReference = GetCellReference(cell, new UInt32Value(rowIndex));
-                foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
+                var cellValue = CellHelper.GetCellValue(cell, workbookPart);
+                if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
+                    continue;
+                if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
+                    continue;
+                cellValue = cellValue.Substring(2, cellValue.Length - 4);
+                foreach (var tableName in tableNames)
                 {
-                    cell.CellValue = new CellValue(item[field._Field].ToString());
-                    cell.DataType = new EnumValue<CellValues>(CellValues.String);
+                    if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
+                        return true;
                 }
             }
-            return newRow;
+            return false;
         }
 
-        private Row CreateRow(Row rowTemplate, uint rowIndex, System.Data.DataTable table, int tableRowIndex, List<ExportDataToExcelTemplate.Models.Field> fields)
+        private List<Models.Field> GetRowFieldsForFill(Row rowTemplate, WorkbookPart workbookPart, string[] tableNames)
         {
-            var newRow = (Row)rowTemplate.Clone();
-            newRow.RowIndex = new UInt32Value(rowIndex);
-            foreach (var cell in newRow.Elements<Cell>())
+            var fields = new List<Models.Field>();
+            foreach (var cell in rowTemplate.Descendants<Cell>())
             {
-                cell.CellReference = GetCellReference(cell, new UInt32Value(rowIndex));
-                foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
+                var cellValue = CellHelper.GetCellValue(cell, workbookPart);
+                if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
+                    continue;
+                if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
+                    continue;
+                cellValue = cellValue.Substring(2, cellValue.Length - 4);
+
+                foreach (var tableName in tableNames)
                 {
-                    cell.CellValue = new CellValue(table.Rows[tableRowIndex][field._Field].ToString());
-                    cell.DataType = new EnumValue<CellValues>(CellValues.String);
-                }
+                    if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
+                    {
+                        var rowIndex = RowHelper.GetRowIndex(cell.CellReference.Value);
+                        var columnIndex = ColumnHelper.GetColumnIndex(cell.CellReference.Value);
+                        fields.Add(new Models.Field(rowIndex, columnIndex, cellValue));
+                    }
+                }                
             }
-            return newRow;
+            return fields;
         }
 
-        private Row CreateRow(Row rowTemplate, uint rowIndex, List<System.Data.DataTable> tables, int tableRowIndex, List<ExportDataToExcelTemplate.Models.Field> fields, Dictionary<string, int> processedTablesRows)
+        
+ 
+        private Row CreateRow(Row rowTemplate, uint rowIndex, List<System.Data.DataTable> tables, int tableRowIndex, List<Models.Field> fields, Dictionary<string, int> processedTablesRows)
         {
-            var newRow = (Row)rowTemplate.Clone();
-            newRow.RowIndex = new UInt32Value(rowIndex);
+            //var newRow = (Row)rowTemplate.Clone();
+            var newRow = (Row)rowTemplate.CloneNode(true);
+            newRow.RowIndex = rowIndex;
             foreach (var cell in newRow.Elements<Cell>())
             {
-                cell.CellReference = GetCellReference(cell, new UInt32Value(rowIndex));
+                cell.CellReference = CellHelper.GetCellReference(cell, rowIndex);
                 foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
                 {
                     var tableName = field._Field.Split('.')[0];
@@ -347,168 +249,6 @@ namespace ExportDataToExcelTemplate
             }
             return newRow;
         }
-
-        private string GetCellValue(Cell cell, WorkbookPart wbPart)
-        {
-            if (cell == null)
-                return null;
-            var value = cell.InnerText;
-            if (cell.DataType == null)
-            {
-                return value;
-            }
-            switch (cell.DataType.Value)
-            {
-                case CellValues.SharedString:
-
-                    var stringTable = wbPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
-
-                    if (stringTable != null)
-                    {
-                        value = stringTable.SharedStringTable.ElementAt(int.Parse(value)).InnerText;
-                    }
-                    break;
-            }
-            return value;
-        }
-
-        private void OpenFile(string filePath)
-        {
-            if (!File.Exists(filePath))
-            {
-                throw new Exception(String.Format("Не удалось найти файл \"{0}\"!", filePath));
-            }
-
-            var process = Process.Start(filePath);
-            if (process != null)
-            {
-                process.WaitForExit();
-            }
-        }
-
-        /// <summary>
-        /// Подавать только файлы в формате .xlsx
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        public System.Data.DataTable ReadFile(String path)
-        {
-            CheckFile(path);
-            return OpenDocumentForRead(path);
-        }
-
-        private System.Data.DataTable OpenDocumentForRead(string path)
-        {
-            System.Data.DataTable data = null;
-            using (var document = SpreadsheetDocument.Open(path, false))
-            {
-                Sheet sheet;
-                try
-                {
-                    sheet = document.WorkbookPart.Workbook.GetFirstChild<Sheets>().Elements<Sheet>().SingleOrDefault(s => s.Name == SheetName);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception(String.Format("Возможно в документе существует два листа с названием \"{0}\"!\n", SheetName), ex);
-                }
-
-                if (sheet == null)
-                {
-                    throw new Exception(String.Format("В файле не найден \"{0}\"!\n", SheetName));
-                }
-
-                var relationshipId = sheet.Id.Value;
-                var worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(relationshipId);
-                var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-
-                var firstRow = true;
-                var columsNames = new List<ColumnName>();
-                foreach (Row row in sheetData.Elements<Row>())
-                {
-                    if (firstRow)
-                    {
-                        columsNames.AddRange(GetNames(row, document.WorkbookPart));
-                        data = GetTable(columsNames);
-                        firstRow = false;
-                        continue;
-                    }
-
-                    var item = data.NewRow();
-                    foreach (var line in columsNames)
-                    {
-                        var coordinates = String.Format("{0}{1}", line.Liter, row.RowIndex);
-                        var cc = row.Elements<Cell>().SingleOrDefault(p => p.CellReference == coordinates);
-                        if (cc == null)
-                        {
-                            throw new Exception(String.Format("Не удалось найти ячейку \"{0}\"!", coordinates));
-                        }
-                        item[line.Name.Trim()] = GetVal(cc, document.WorkbookPart);
-
-                    }
-                    data.Rows.Add(item);
-                }
-            }
-
-            return data;
-        }
-
-        private System.Data.DataTable GetTable(IEnumerable<ColumnName> columsNames)
-        {
-            var teb = new System.Data.DataTable("ExelTable");
-
-            foreach (var col in columsNames.Select(columnName => new System.Data.DataColumn { DataType = typeof(String), ColumnName = columnName.Name.Trim() }))
-            {
-                teb.Columns.Add(col);
-            }
-
-            return teb;
-        }
-
-        private IEnumerable<ColumnName> GetNames(Row row, WorkbookPart wbPart)
-        {
-            return (from cell in row.Elements<Cell>()
-                    where cell != null
-                    let
-                        text = GetVal(cell, wbPart)
-                    where !String.IsNullOrWhiteSpace(text)
-                    select
-                    new ColumnName(text, Regex.Replace(cell.CellReference.Value, @"[\0-9]", ""))).ToList();
-        }
-
-        private string GetVal(Cell cell, WorkbookPart wbPart)
-        {
-            string value = cell.InnerText;
-
-            if (cell.DataType == null)
-            {
-                return value;
-            }
-            switch (cell.DataType.Value)
-            {
-                case CellValues.SharedString:
-
-                    var stringTable =
-                        wbPart.GetPartsOfType<SharedStringTablePart>()
-                            .FirstOrDefault();
-
-                    if (stringTable != null)
-                    {
-                        value =
-                            stringTable.SharedStringTable
-                                .ElementAt(int.Parse(value)).InnerText;
-                    }
-                    break;
-            }
-
-            return value;
-        }
-
-        private void CheckFile(String path)
-        {
-            if (String.IsNullOrWhiteSpace(path) || !File.Exists(path))
-            {
-                throw new Exception(String.Format("Такого файла \"{0}\", не существует!", path));
-            }
-        }
+                
     }
 }
