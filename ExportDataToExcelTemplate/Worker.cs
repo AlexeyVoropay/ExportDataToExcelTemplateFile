@@ -20,7 +20,7 @@ namespace ExportDataToExcelTemplate
         /// <summary>
         /// путь к папке с шаблонами 
         /// </summary>
-        private const String TemplateFolder = @"..\..\Templates\";
+        private String TemplateFolder = Path.GetFullPath(@"..\..\..\..\ExcelTemplates\Templates\");
 
         /// <summary>
         /// имя листа шаблона (с которым мы будем работать) 
@@ -54,7 +54,7 @@ namespace ExportDataToExcelTemplate
 
             OpenForRewriteFile(filePath, dataTables, fields);
 
-            OpenFile(filePath);
+            //OpenFile(filePath);
         }
 
         private String CreateFile(String templateName)

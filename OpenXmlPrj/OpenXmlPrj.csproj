@@ -50,15 +50,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConvertToDataTable.cs" />
-    <Compile Include="Interfaces\IDataForTest.cs" />
-    <Compile Include="TestData.cs" />
-    <Compile Include="DataForTest.cs" />
-    <Compile Include="Models\DrillingReport.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ExcelTemplates\ExcelTemplates.csproj">
+      <Project>{872CB1C6-FC68-46D6-9863-0FE8A38832E6}</Project>
+      <Name>ExcelTemplates</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ExportDataToExcelTemplate\ExportDataToExcelTemplate.csproj">
       <Project>{19B771BF-22DA-45DC-81F7-EF33573752B1}</Project>
       <Name>ExportDataToExcelTemplate</Name>
@@ -67,7 +66,6 @@
   <ItemGroup />
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="Templates\template.xlsx" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
