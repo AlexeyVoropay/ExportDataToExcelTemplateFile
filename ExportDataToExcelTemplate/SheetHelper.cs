@@ -25,5 +25,22 @@ namespace ExportDataToExcelTemplate
             }
             return sheet;
         }
+
+        public static void AddEmptyRows(SheetData sheetData)
+        {
+            var rows = sheetData.Elements<Row>().ToList();
+            var maxRowIndex = rows.Max(x => x.RowIndex);
+            for (int i = 0; i < maxRowIndex + 1; i++)
+            {
+                if (rows.FirstOrDefault(x => x.RowIndex == i) == null)
+                {
+                    var prevRow = sheetData.Elements<Row>().FirstOrDefault(x => x.RowIndex == i - 1);
+                    if (prevRow != null)
+                    {
+                        prevRow.InsertAfterSelf(new Row { RowIndex = (uint)i });
+                    }
+                }
+            }
+        }
     }
 }

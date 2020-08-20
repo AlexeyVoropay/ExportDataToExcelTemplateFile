@@ -34,6 +34,7 @@ namespace ExportDataToExcelTemplate
                 FillFields(workbookPart, sheet.Id.Value, fieldsTable);
                 FillTables(workbookPart, sheet.Id.Value, dataTables);
 
+                //Test adding MergeCell
                 //var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id.Value);
                 //if (worksheetPart.Worksheet.Elements<MergeCells>().Count() > 0)
                 //{ 
@@ -75,15 +76,16 @@ namespace ExportDataToExcelTemplate
             }
         }
 
+        
         private void FillTables(WorkbookPart workbookPart, string sheetId, List<System.Data.DataTable> dataTables)
         {
             var processedTablesRows = dataTables.ToDictionary(x => x.TableName, y => 0);
             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
             var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-            var rows = sheetData.Elements<Row>().ToArray();
-            for (int rowIndex = 0; rowIndex < rows.Length; rowIndex++)
+            SheetHelper.AddEmptyRows(sheetData);
+            var rows = sheetData.Elements<Row>().ToList();
+            foreach (var row in rows)
             {
-                var row = rows[rowIndex];
                 if (!IsRowContainsCellsForFill(row, workbookPart, dataTables.Select(x => x.TableName).ToArray()))
                     continue;
                 var fields = GetRowFieldsForFill(row, workbookPart, dataTables.Select(x => x.TableName).ToArray());
@@ -114,7 +116,7 @@ namespace ExportDataToExcelTemplate
                         }
                         else
                         {
-                            Helper.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
+                                Helper.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
                         }
 
                         if (row.RowIndex != generatedRowIndex)
@@ -149,38 +151,8 @@ namespace ExportDataToExcelTemplate
                     }
                     row.Remove();
                 }
-            }           
-
-            #region old
-            //foreach (var newRow in footer.Select(item => CreateLabel(item, (UInt32)dataTable.Rows.Count)))
-            //{
-            //    sheetData.InsertBefore(newRow, rowTemplate);
-            //}
-
-            //foreach (var row in sheetData.Elements<Row>())
-            //{
-            //    if (!IsRowContainsCellsForFill(row, workbookPart, dataTable.TableName))
-            //        continue;
-            //    var fields = GetRowFieldsForFill(row, workbookPart, dataTable.TableName);
-            //    var generatedRowIndex = row.RowIndex;
-            //    if (fields.Any())
-            //    {                    
-            //        var dataTableRowsCount = dataTable.Rows.Count;
-            //        for (int i = 0; i < 2; i++)
-            //        {
-            //            var item = dataTable.Rows[i];
-            //            var generatedRow = CreateRow(row, generatedRowIndex, item, fields);
-            //            row.InsertBeforeSelf(generatedRow);
-            //            generatedRowIndex++;
-            //        }
-            //        row.Remove();
-            //    }
-            //}
-            //var t1Count = sheetData.Elements<Row>().Count();
-            #endregion old
-        }
-
-        
+            }
+        }        
 
         private bool IsRowContainsCellsForFill(Row row, WorkbookPart workbookPart, string[] tableNames)
         {
@@ -225,9 +197,7 @@ namespace ExportDataToExcelTemplate
             }
             return fields;
         }
-
-        
- 
+         
         private Row CreateRow(Row rowTemplate, uint rowIndex, List<System.Data.DataTable> tables, int tableRowIndex, List<Models.Field> fields, Dictionary<string, int> processedTablesRows)
         {
             //var newRow = (Row)rowTemplate.Clone();

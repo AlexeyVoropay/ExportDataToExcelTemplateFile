@@ -25,8 +25,19 @@ namespace ExportDataToExcelTemplate
             Worksheet worksheet = worksheetPart.Worksheet;
             SheetData sheetData = worksheet.GetFirstChild<SheetData>();
 
-            Row retRow = !isNewLastRow ? sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex == rowIndex) : null;
-
+            var sheetRows = sheetData.Elements<Row>().ToList();
+            var maxRowIndex = sheetRows.Max(x => x.RowIndex);
+            for (int i = 0; i < maxRowIndex + 1; i++)
+            {
+                if (sheetRows.FirstOrDefault(x => x.RowIndex == i) == null)
+                {
+                    sheetRows.Add(new Row { RowIndex = (uint)i });
+                }
+            }
+            sheetRows.OrderBy(x => x.RowIndex);
+            Row retRow = !isNewLastRow 
+                ? sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex == rowIndex) 
+                : null;
             // If the worksheet does not contain a row with the specified row index, insert one.
             if (retRow != null)
             {
@@ -57,7 +68,9 @@ namespace ExportDataToExcelTemplate
             {
                 // Row doesn't exist yet, shifting not needed.
                 // Rows must be in sequential order according to RowIndex. Determine where to insert the new row.
-                Row refRow = !isNewLastRow ? sheetData.Elements<Row>().FirstOrDefault(row => row.RowIndex > rowIndex) : null;
+                Row refRow = !isNewLastRow 
+                    ? sheetData.Elements<Row>().FirstOrDefault(row => row.RowIndex > rowIndex) 
+                    : null;
 
                 // use the insert row if it exists
                 retRow = insertRow ?? new Row() { RowIndex = rowIndex };
