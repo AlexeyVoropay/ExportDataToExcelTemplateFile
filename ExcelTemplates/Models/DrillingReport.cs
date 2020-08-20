@@ -13,7 +13,9 @@ namespace ExcelTemplates.Models
 
         public List<KeyValuePair<string, string>> SvInfo { get; set; }
 
-        public List<KeyValuePair<string, string>> Сonstruction { get; internal set; }
+        public List<KeyValuePair<string, string>> Сonstruction { get; set; }
+
+        public List<KnbkItem> Knbk { get; set; }
 
         public Hse Hse { get; set; }
 
@@ -71,11 +73,28 @@ namespace ExcelTemplates.Models
                 сonstructionTable.Rows.Add(row);
             }
 
+            var knbkTable = new DataTable("Knbk");
+            var knbkTableCol1 = new DataColumn { DataType = typeof(string), ColumnName = "knbk.Name" };
+            var knbkTableCol2 = new DataColumn { DataType = typeof(string), ColumnName = "knbk.In" };
+            var knbkTableCol3 = new DataColumn { DataType = typeof(string), ColumnName = "knbk.Od" };
+            knbkTable.Columns.Add(knbkTableCol1);
+            knbkTable.Columns.Add(knbkTableCol2);
+            knbkTable.Columns.Add(knbkTableCol3);
+            foreach (var knbkItem in Knbk)
+            {
+                var row = knbkTable.NewRow();
+                row["Knbk.Name"] = knbkItem.Name;
+                row["Knbk.In"] = knbkItem.In;
+                row["Knbk.Od"] = knbkItem.Od;
+                knbkTable.Rows.Add(row);
+            }
+
             return new List<DataTable>
                 {
                     wellInfoTable,
                     svInfoTable,
                     сonstructionTable,
+                    knbkTable,
                 };
         }        
     }

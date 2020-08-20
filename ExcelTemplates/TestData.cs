@@ -33,6 +33,11 @@ namespace ExcelTemplates
                     new KeyValuePair<string, string>("Хвостовик",""),
                     new KeyValuePair<string, string>("Пилотный ствол",""),
                 },
+                Knbk = new List< KnbkItem   >
+                {
+                    new KnbkItem{ Name = "Раз01", In = "11", Od = "22"},
+                    new KnbkItem{ Name = "Два02", In = "33", Od = "44"},
+                },
                 Hse = new Hse
                 {
                     NumStopCards = 12,
