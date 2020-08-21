@@ -1,9 +1,8 @@
-﻿using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Spreadsheet;
-using System.Linq;
-
-namespace ExportDataToExcelTemplate.Models
+﻿namespace ExportDataToExcelTemplate.Models
 {
+    using DocumentFormat.OpenXml;
+    using System.Linq;
+
     public class CellReference
     {
         public StringValue Reference { get; set; } 

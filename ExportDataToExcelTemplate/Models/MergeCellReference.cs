@@ -1,7 +1,6 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Spreadsheet;
 using System.Linq;
-
 namespace ExportDataToExcelTemplate.Models
 {
     public class MergeCellReference

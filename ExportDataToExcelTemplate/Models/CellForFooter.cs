@@ -1,8 +1,8 @@
-﻿using System;
-using DocumentFormat.OpenXml.Spreadsheet;
-
-namespace ExportDataToExcelTemplate.Models
+﻿namespace ExportDataToExcelTemplate.Models
 {
+    using System;
+    using DocumentFormat.OpenXml.Spreadsheet;
+
     public class CellForFooter
     {
         /// <summary>

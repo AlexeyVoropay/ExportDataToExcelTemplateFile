@@ -1,4 +1,4 @@
-﻿namespace ExcelTemplates.Models
+﻿namespace ExcelTemplates.TemplatesModels
 {
     using System.Collections.Generic;
     using System.Data;

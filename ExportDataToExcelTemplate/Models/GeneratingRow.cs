@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using DocumentFormat.OpenXml.Spreadsheet;
-using ExportDataToExcelTemplate.Models;
-
-namespace ExportDataToExcelTemplate.Models
+﻿namespace ExportDataToExcelTemplate.Models
 {
+    using DocumentFormat.OpenXml.Spreadsheet;
+    using System;
+    using System.Collections.Generic;
+
     public class GeneratingRow
     {
         /// <summary>

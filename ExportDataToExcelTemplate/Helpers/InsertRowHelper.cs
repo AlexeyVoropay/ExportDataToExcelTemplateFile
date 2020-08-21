@@ -1,14 +1,14 @@
-﻿using DocumentFormat.OpenXml;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-
-namespace ExportDataToExcelTemplate
+﻿namespace ExportDataToExcelTemplate
 {
-    public static class Helper
+    using DocumentFormat.OpenXml;
+    using DocumentFormat.OpenXml.Packaging;
+    using DocumentFormat.OpenXml.Spreadsheet;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+
+    public static class InsertRowHelper
     {
         /// <summary>
         /// Inserts a new row at the desired index. If one already exists, then it is

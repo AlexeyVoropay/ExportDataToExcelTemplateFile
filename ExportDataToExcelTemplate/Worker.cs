@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using ExportDataToExcelTemplate.Helpers;
 using ExportDataToExcelTemplate.Models;
 using System;
 using System.Collections.Generic;
@@ -29,7 +30,7 @@ namespace ExportDataToExcelTemplate
         {
             using (var document = SpreadsheetDocument.Open(filePath, true))
             {
-                Sheet sheet = SheetHelper.GetSheet(document);
+                Sheet sheet = Helper.GetSheet(document);
                 var workbookPart = document.WorkbookPart;
                 FillFields(workbookPart, sheet.Id.Value, fieldsTable);
                 FillTables(workbookPart, sheet.Id.Value, dataTables);
@@ -56,7 +57,7 @@ namespace ExportDataToExcelTemplate
                 {
                     if (cell == null)
                         continue;
-                    var cellValue = CellHelper.GetCellValue(cell, workbookPart);
+                    var cellValue = Helper.GetCellValue(cell, workbookPart);
                     if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
                         continue;
                     cellValue = cellValue.Substring(2, cellValue.Length - 4);
@@ -82,7 +83,7 @@ namespace ExportDataToExcelTemplate
             var processedTablesRows = dataTables.ToDictionary(x => x.TableName, y => 0);
             var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
             var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-            SheetHelper.AddEmptyRows(sheetData);
+            Helper.AddEmptyRows(sheetData);
             var rows = sheetData.Elements<Row>().ToList();
             foreach (var row in rows)
             {
@@ -118,7 +119,7 @@ namespace ExportDataToExcelTemplate
                         }
                         else
                         {
-                                Helper.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
+                                InsertRowHelper.InsertRow(generatedRowIndex, worksheetPart, generatedRow);
                         }
 
                         if (row.RowIndex != generatedRowIndex)
@@ -160,7 +161,7 @@ namespace ExportDataToExcelTemplate
         {
             foreach (var cell in row.Descendants<Cell>())
             {
-                var cellValue = CellHelper.GetCellValue(cell, workbookPart);
+                var cellValue = Helper.GetCellValue(cell, workbookPart);
                 if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
                     continue;
                 if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
@@ -180,7 +181,7 @@ namespace ExportDataToExcelTemplate
             var fields = new List<Models.Field>();
             foreach (var cell in rowTemplate.Descendants<Cell>())
             {
-                var cellValue = CellHelper.GetCellValue(cell, workbookPart);
+                var cellValue = Helper.GetCellValue(cell, workbookPart);
                 if (String.IsNullOrWhiteSpace(cellValue) || cellValue.Length <= 4)
                     continue;
                 if (!cellValue.StartsWith("{{") || !cellValue.EndsWith("}}"))
@@ -191,8 +192,8 @@ namespace ExportDataToExcelTemplate
                 {
                     if (cellValue.IndexOf($"{tableName}.", StringComparison.Ordinal) != -1)
                     {
-                        var rowIndex = RowHelper.GetRowIndex(cell.CellReference.Value);
-                        var columnIndex = ColumnHelper.GetColumnIndex(cell.CellReference.Value);
+                        var rowIndex = Helper.GetRowIndex(cell.CellReference.Value);
+                        var columnIndex = Helper.GetColumnIndex(cell.CellReference.Value);
                         fields.Add(new Models.Field(rowIndex, columnIndex, cellValue));
                     }
                 }                
@@ -207,7 +208,7 @@ namespace ExportDataToExcelTemplate
             newRow.RowIndex = rowIndex;
             foreach (var cell in newRow.Elements<Cell>())
             {
-                cell.CellReference = CellHelper.GetCellReference(cell, rowIndex);
+                cell.CellReference = Helper.GetCellReference(cell, rowIndex);
                 foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
                 {
                     var tableName = field._Field.Split('.')[0];

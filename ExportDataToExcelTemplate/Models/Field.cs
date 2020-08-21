@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace ExportDataToExcelTemplate.Models
+﻿namespace ExportDataToExcelTemplate.Models
 {
+    using System;
+
     public class Field
     {
         /// <summary>

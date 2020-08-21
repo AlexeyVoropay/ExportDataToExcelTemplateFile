@@ -1,4 +1,4 @@
-﻿namespace ExcelTemplates.Models
+﻿namespace ExcelTemplates.TemplatesModels
 {
     public class TrajectoryItem
     {

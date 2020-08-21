@@ -5,9 +5,7 @@ VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExportDataToExcelTemplate", "ExportDataToExcelTemplate\ExportDataToExcelTemplate.csproj", "{19B771BF-22DA-45DC-81F7-EF33573752B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelTemplates", "ExcelTemplates\ExcelTemplates.csproj", "{872CB1C6-FC68-46D6-9863-0FE8A38832E6}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,18 +29,6 @@ Global
 		{19B771BF-22DA-45DC-81F7-EF33573752B1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{19B771BF-22DA-45DC-81F7-EF33573752B1}.Release|x86.ActiveCfg = Release|Any CPU
 		{19B771BF-22DA-45DC-81F7-EF33573752B1}.Release|x86.Build.0 = Release|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Debug|x86.Build.0 = Debug|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Release|x86.ActiveCfg = Release|Any CPU
-		{872CB1C6-FC68-46D6-9863-0FE8A38832E6}.Release|x86.Build.0 = Release|Any CPU
 		{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU

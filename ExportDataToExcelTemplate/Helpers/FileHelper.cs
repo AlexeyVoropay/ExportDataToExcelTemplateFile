@@ -1,10 +1,10 @@
-﻿using System;
-using System.Globalization;
-using System.IO;
-using System.Text.RegularExpressions;
-
-namespace ExportDataToExcelTemplate
+﻿namespace ExportDataToExcelTemplate.Helpers
 {
+    using System;
+    using System.Globalization;
+    using System.IO;
+    using System.Text.RegularExpressions;
+
     public static class FileHelper
     {   
         public static void CheckFile(String path)
@@ -16,7 +16,7 @@ namespace ExportDataToExcelTemplate
         }
         public static String CreateFile(string templateName)
         {
-            string templateFolder = Path.GetFullPath(@"..\..\..\..\ExcelTemplates\Templates\");
+            string templateFolder = Path.GetFullPath(@"..\..\..\..\ExportDataToExcelTemplate\Templates\");
             string fileExtention = ".xlsx";
             string resultFolder = @"C:\xlsx_repository\";
             if (!Directory.Exists(resultFolder))

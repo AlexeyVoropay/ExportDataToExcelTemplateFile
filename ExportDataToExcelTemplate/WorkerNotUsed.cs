@@ -1,6 +1,7 @@
 ﻿using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
+using ExportDataToExcelTemplate.Helpers;
 using ExportDataToExcelTemplate.Models;
 using System;
 using System.Collections.Generic;
@@ -23,7 +24,7 @@ namespace ExportDataToExcelTemplate
             row.RowIndex = new UInt32Value(item.Row.RowIndex + (count - 1));
             foreach (var cell in item.Cells)
             {
-                cell.Cell.CellReference = CellHelper.GetCellReference(cell.Cell, row.RowIndex);
+                cell.Cell.CellReference = Helper.GetCellReference(cell.Cell, row.RowIndex);
                 cell.Cell.CellValue = new CellValue(cell.Value);
                 cell.Cell.DataType = new EnumValue<CellValues>(CellValues.String);
                 row.Append(cell.Cell);
@@ -38,7 +39,7 @@ namespace ExportDataToExcelTemplate
 
             foreach (var cell in newRow.Elements<Cell>())
             {
-                cell.CellReference = CellHelper.GetCellReference(cell, new UInt32Value(rowIndex));
+                cell.CellReference = Helper.GetCellReference(cell, new UInt32Value(rowIndex));
                 foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
                 {
                     cell.CellValue = new CellValue(item[field._Field].ToString());
@@ -55,7 +56,7 @@ namespace ExportDataToExcelTemplate
             newRow.RowIndex = new UInt32Value(rowIndex);
             foreach (var cell in newRow.Elements<Cell>())
             {
-                cell.CellReference = CellHelper.GetCellReference(cell, new UInt32Value(rowIndex));
+                cell.CellReference = Helper.GetCellReference(cell, new UInt32Value(rowIndex));
                 foreach (var field in fields.Where(fil => cell.CellReference == fil.Column + rowIndex))
                 {
                     cell.CellValue = new CellValue(table.Rows[tableRowIndex][field._Field].ToString());
@@ -95,7 +96,7 @@ namespace ExportDataToExcelTemplate
             System.Data.DataTable data = null;
             using (var document = SpreadsheetDocument.Open(path, false))
             {
-                Sheet sheet = SheetHelper.GetSheet(document);
+                Sheet sheet = Helper.GetSheet(document);
                 var relationshipId = sheet.Id.Value;
                 var worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(relationshipId);
                 var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
