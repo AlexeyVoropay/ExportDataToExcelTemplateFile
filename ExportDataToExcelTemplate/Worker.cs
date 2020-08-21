@@ -96,7 +96,9 @@ namespace ExportDataToExcelTemplate
                     int rowsForProcess = 0;
                     if (!fields.Any(x => x._Field.Contains(":1")))
                     {
-                        rowsForProcess = dataTables.Max(x => x.Rows.Count - processedTablesRows[x.TableName]);
+                        rowsForProcess = dataTables
+                            .Where(x => fields.Any(y => y._Field.Split('.')[0] == x.TableName))
+                            .Max(x => x.Rows.Count - processedTablesRows[x.TableName]);
                     }
                     else
                     {
