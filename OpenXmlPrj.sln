@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30128.74
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32407.343
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExportDataToExcelTemplate", "ExportDataToExcelTemplate\ExportDataToExcelTemplate.csproj", "{19B771BF-22DA-45DC-81F7-EF33573752B1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestConsole", "TestConsole\TestConsole.csproj", "{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelExport", "ExcelExport\ExcelExport.csproj", "{29BCA76D-5846-435F-82DB-EFAC29D292FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,18 @@ Global
 		{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}.Release|x86.ActiveCfg = Release|Any CPU
 		{F9E98A5C-D6CD-4FAC-A8E8-86924D9E4375}.Release|x86.Build.0 = Release|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Debug|x86.Build.0 = Debug|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Release|x86.ActiveCfg = Release|Any CPU
+		{29BCA76D-5846-435F-82DB-EFAC29D292FE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

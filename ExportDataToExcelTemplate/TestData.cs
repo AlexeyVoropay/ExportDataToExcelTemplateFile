@@ -5,6 +5,18 @@ namespace ExcelTemplates
 {
     public static class TestData
     {
+        public static WalletReport GetTestData2()
+        {
+            return new WalletReport
+            {
+                ReportDate = "12.07.2020",
+                ReportNumber = "87",
+                Trajectory = new List<WalletReportItem>
+                {
+                    new WalletReportItem{ Md = "2500", Incl = "76,5", Azi = "213,5",Tvd ="2000",Closure ="500", Dls = "1,5", Compare = "0,5м выше / 0,5м правее"},
+                },
+            };
+        }
         public static DrillingReport GetTestData()
         {
             return new DrillingReport

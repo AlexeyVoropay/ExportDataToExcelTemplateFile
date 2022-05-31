@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ExcelExport\ExcelExport.csproj" />
     <ProjectReference Include="..\ExportDataToExcelTemplate\ExportDataToExcelTemplate.csproj" />
   </ItemGroup>
 
