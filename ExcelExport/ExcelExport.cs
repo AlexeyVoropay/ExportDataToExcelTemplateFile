@@ -60,7 +60,7 @@
             return stream;
         }
 
-        public static void FillDocument(SpreadsheetDocument document, List<SheetExportData> sheetsData, ILogger logger)
+        public static void FillDocument(SpreadsheetDocument document, List<SheetExportData> sheetsData, ILogger logger = null)
         {
             foreach (var sheetData in sheetsData)
             {
@@ -70,7 +70,9 @@
                 FillDocumentSheet(document, sheetData);
 
                 sw.Stop();
-                logger.LogDebug($"FillDocument Sheet: {sheetData.SheetName}, Time: {sw.Elapsed.TotalSeconds}");
+
+                if(logger != null)
+                    logger.LogDebug($"FillDocument Sheet: {sheetData.SheetName}, Time: {sw.Elapsed.TotalSeconds}");
             }
         }
 

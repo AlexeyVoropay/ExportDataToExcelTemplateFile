@@ -1,8 +1,8 @@
 ﻿namespace GoExcelReport.Models.ExcelExport
 {
     using System.Collections.Generic;
-    using GoExcelExport.Interfaces;
-    using GoExcelExport.Models;
+    using global::ExcelExport.Interfaces;
+    using global::ExcelExport.Models;
 
     public class ExcelDrillingReportTrajectoryItem : IExcelItem
     {
